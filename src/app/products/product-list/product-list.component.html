@@ -3,7 +3,8 @@
 </h2>
 
 <div class="right">
-    {{ productsNumber$ | async }} products /
+    {{ productsNumber$ | async }} products loaded /
+    {{ productsTotalNumber$ | async }} on the server /
 
     {favourites, plural,
     =0 {no favourite}
@@ -52,7 +53,7 @@
         Next Page >
     </button>
 
-    <button (click)="loadMore()" *ngIf="(productsNumber$ | async) <= end">
+    <button (click)="loadMore()" *ngIf="(productsNumber$ | async) <= end && (hasMoreProducts$ | async)">
         Load {{ productsToLoad }} more...
     </button>
 </div>

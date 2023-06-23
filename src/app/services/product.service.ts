@@ -11,12 +11,23 @@ export class ProductService {
   private baseUrl = 'https://storerestservice.azurewebsites.net/api/products/';
   private productsSubject = new BehaviorSubject<Product[]>([]);
   products$: Observable<Product[]> = this.productsSubject.asObservable();
+  productsTotalNumber$: Observable<number>;
   mostExpensiveProduct$: Observable<Product>;
   productsToLoad = 10;
 
   constructor(private http: HttpClient) {
     this.initProducts();
     this.initMostExpensiveProduct();
+    this.initProductsTotalNumber();
+  }
+
+  private initProductsTotalNumber() {
+    this.productsTotalNumber$ = this
+                                  .http
+                                  .get<number>(this.baseUrl + 'count')
+                                  .pipe(
+                                    shareReplay()
+                                  );
   }
 
   private initMostExpensiveProduct() {
@@ -24,11 +35,17 @@ export class ProductService {
       this
       .products$
       .pipe(
-        map(products => [...products].sort((p1, p2) => p1.price > p2.price ? -1 : 1)),
-        // [{p1}, {p2}, {p3}]
-        mergeAll(),
-        // {p1}, {p2}, {p3}
-        first()
+        filter(products => products.length > 0),
+        switchMap(
+          products => of(products)
+                        .pipe(
+                          map(products => [...products].sort((p1, p2) => p1.price > p2.price ? -1 : 1)),
+                          // [{p1}, {p2}, {p3}]
+                          mergeAll(),
+                          // {p1}, {p2}, {p3}
+                          first()
+                        )
+        )
       )
   }
 
@@ -62,6 +79,7 @@ export class ProductService {
   }
 
   resetList() {
+    this.productsSubject.next([]);
     this.initProducts();
   }
 }

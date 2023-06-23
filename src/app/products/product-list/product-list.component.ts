@@ -19,7 +19,9 @@ export class ProductListComponent implements OnInit {
 
   products$: Observable<Product[]>;
   productsNumber$: Observable<number>;
+  productsTotalNumber$: Observable<number>;
   mostExpensiveProduct$: Observable<Product>;
+  hasMoreProducts$: Observable<boolean>;
 
   errorMessage;
 
@@ -41,6 +43,17 @@ export class ProductListComponent implements OnInit {
                                 map(products => products.length),
                                 startWith(0)
                               );
+
+    this.productsTotalNumber$ = this
+                                    .productService
+                                    .productsTotalNumber$;
+
+    this.hasMoreProducts$ = combineLatest([this.productsNumber$, this.productsTotalNumber$])
+      .pipe(
+        map(([productsNumber, productsTotalNumber]) =>
+          productsNumber < productsTotalNumber
+        )
+      );
 
     this.mostExpensiveProduct$ = this
                                     .productService
@@ -86,7 +99,7 @@ export class ProductListComponent implements OnInit {
 
   reset() {
     this.productService.resetList();
-    this.router.navigateByUrl('/products'); // self navigation to force data update
+    this.resetPagination();
   }
 
   resetPagination() {
